@@ -1,0 +1,36 @@
+# Windows 真 miniQMT 模式:DB/Web/Caddy 容器化,API 在宿主机跑(可 import xtquant)
+#
+# 启动依赖:
+#   docker compose -f deploy/docker-compose.prod.yml \
+#     -f deploy/docker-compose.windows.yml \
+#     -f deploy/docker-compose.windows-miniqmt.yml \
+#     --env-file .env.prod up -d --build db web caddy
+#
+# 宿主机 API: deploy/windows/run-host-api.ps1
+#
+# 前置:Docker Desktop(WSL2 后端);host.docker.internal 默认可用
+
+services:
+  db:
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+
+  # 不启容器 API(改由宿主机进程提供)
+  api:
+    profiles: ["container-api"]
+
+  web:
+    # 覆盖 prod 里对 api healthy 的依赖;SSR 走浏览器→Caddy→host API
+    depends_on: {}
+
+  caddy:
+    volumes:
+      - ./Caddyfile.windows-miniqmt:/etc/caddy/Caddyfile:ro
+    environment:
+      HOST_API_PORT: ${HOST_API_PORT:-8000}
+      SIGNAL_SITE_ADDRESS: ${SIGNAL_SITE_ADDRESS:-:80}
+      CADDY_BASIC_AUTH_USER: ${CADDY_BASIC_AUTH_USER:?set CADDY_BASIC_AUTH_USER}
+      CADDY_BASIC_AUTH_HASH: ${CADDY_BASIC_AUTH_HASH:?set CADDY_BASIC_AUTH_HASH}
+      CADDY_ACME_EMAIL: ${CADDY_ACME_EMAIL:-}
+    depends_on:
+      - web

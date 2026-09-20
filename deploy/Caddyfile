@@ -1,0 +1,37 @@
+# 生产反代:HTTPS(可选) + Basic Auth + /api → api / → web
+#
+# SIGNAL_SITE_ADDRESS:
+#   - 有公网域名: example.com  (自动 HTTPS / Let's Encrypt)
+#   - 仅内网/IP:   :80
+#
+# Basic Auth 哈希用:
+#   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'your-password'
+# 写入 .env 时把 bcrypt 里的 $ 写成 $$(compose 转义)。
+
+{$SIGNAL_SITE_ADDRESS::80} {
+	basic_auth {
+		{$CADDY_BASIC_AUTH_USER} {$CADDY_BASIC_AUTH_HASH}
+	}
+
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle /health {
+		reverse_proxy api:8000
+	}
+
+	handle /docs* {
+		reverse_proxy api:8000
+	}
+
+	handle /openapi.json {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

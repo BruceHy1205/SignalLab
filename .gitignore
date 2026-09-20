@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.prod
+.env.*.local
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+.DS_Store
+node_modules/
+.next/
+apps/web/out/
+
+# 本地研究任务产出（勿提交 / 勿发布）
+data/
+rdagent-build.log
+

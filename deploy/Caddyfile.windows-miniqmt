@@ -1,0 +1,36 @@
+# Windows + 真 miniQMT:API 跑在宿主机,Caddy/Web/DB 在 Docker。
+# API 默认监听宿主机 8000;容器内用 host.docker.internal 反代。
+#
+# 配合:
+#   docker compose -f deploy/docker-compose.prod.yml \
+#     -f deploy/docker-compose.windows.yml \
+#     -f deploy/docker-compose.windows-miniqmt.yml \
+#     --env-file .env.prod up -d --build
+
+{$SIGNAL_SITE_ADDRESS::80} {
+	basic_auth {
+		{$CADDY_BASIC_AUTH_USER} {$CADDY_BASIC_AUTH_HASH}
+	}
+
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy host.docker.internal:{$HOST_API_PORT:8000}
+	}
+
+	handle /health {
+		reverse_proxy host.docker.internal:{$HOST_API_PORT:8000}
+	}
+
+	handle /docs* {
+		reverse_proxy host.docker.internal:{$HOST_API_PORT:8000}
+	}
+
+	handle /openapi.json {
+		reverse_proxy host.docker.internal:{$HOST_API_PORT:8000}
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

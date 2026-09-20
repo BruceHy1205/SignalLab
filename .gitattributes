@@ -1,0 +1,2 @@
+*.sh text eol=lf
+scripts/publish-to-signallab.sh text eol=lf

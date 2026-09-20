@@ -1,0 +1,7 @@
+# 定时备份用:pg_dump + 可选 aws s3 cp
+FROM postgres:16-alpine
+RUN apk add --no-cache aws-cli gzip coreutils \
+    && mkdir -p /var/backups/signal
+COPY backup/backup_db.sh backup/restore_db.sh backup/backup_loop.sh /backup/
+RUN chmod +x /backup/*.sh
+ENTRYPOINT ["/bin/sh", "/backup/backup_loop.sh"]
